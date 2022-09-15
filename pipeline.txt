@@ -1,0 +1,39 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool: MyPool
+variables:
+- group: Staging-Server-Cred
+
+steps:
+
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(Build.SourcesDirectory)'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+    replaceExistingArchive: true
+
+- task: CopyPublishBuildArtifacts@1
+  inputs:
+    CopyRoot: '$(Build.ArtifactStagingDirectory)'
+    Contents: '$(Build.BuildId).zip'
+    ArtifactName: 'html-$(Build.BuildId)'
+    ArtifactType: 'Container'
+
+
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Write your commands here
+      sudo cp -p $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip /var/www/html
+      cd /var/www/html
+      sudo unzip -o $(Build.BuildId).zip
+      sudo rm -f $(Build.BuildId).zip
