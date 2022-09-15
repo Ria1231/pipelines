@@ -1,0 +1,13 @@
+sudo chmod 400 $(Agent.TempDirectory)/newkey.pem
+
+sudo scp -o StrictHostKeyChecking=no -i $(Agent.TempDirectory)/newkey.pem $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip $(SSH_User)@$(SSH_Host):/var/www/html 
+failOnStderr: true
+
+echo "cd /var/www/html" > RemoteAppHost.sh
+echo "unzip -o $(Build.BuildId).zip" >> RemoteAppHost.sh
+echo "rm -f $(Build.BuildId).zip" >> RemoteAppHost.sh
+scp -i $(Agent.TempDirectory)/newkey.pem -o StrictHostKeyChecking=no RemoteAppHost.sh $(SSH_User)@$(SSH_Host):.
+ssh -i $(Agent.TempDirectory)/newkey.pem -o StrictHostKeyChecking=no $(SSH_User)@$(SSH_Host) chmod a+x RemoteAppHost.sh
+ssh -i $(Agent.TempDirectory)/newkey.pem -o StrictHostKeyChecking=no $(SSH_User)@$(SSH_Host) sh RemoteAppHost.sh
+
+
